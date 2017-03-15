@@ -22,7 +22,9 @@
         "nikic/fast-route": "^1.2.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^6.0.8"
+        "phpunit/phpunit": "^6.0.8",
+        "http-interop/http-factory-diactoros": "0.2.0",
+        "atanvarno/cache-apcu": "^0.1.1"
     },
     "autoload": {
         "psr-4": {

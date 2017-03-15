@@ -8,7 +8,6 @@
 
 namespace Atanvarno\Router;
 
-
 /** PSR-7 use block */
 use Psr\Http\Message\RequestInterface;
 
@@ -48,6 +47,7 @@ class SimpleRouter implements Router
             throw new InvalidArgumentException($msg);
         }
         $this->driver = $driver;
+        $this->routes = [];
 
         // Ensure routes array is numerically indexed.
         $routes = array_values($routes);
@@ -105,7 +105,7 @@ class SimpleRouter implements Router
                 throw new MethodNotAllowedException($result[1], $method);
             default: // No break
             case Dispatcher::FOUND:
-                return $result;
+                return [$result[1], $result[2]];
         }
     }
 

@@ -17,7 +17,7 @@ class CachedRouter extends SimpleRouter
 
     public function __construct(
         CacheInterface $cache,
-        string $cacheKey,
+        string $cacheKey = 'routerData',
         $driver = Router::GROUP_COUNT,
         array $routes = [],
         bool $cacheDisabled = false

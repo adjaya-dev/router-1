@@ -9,8 +9,6 @@
 namespace Atanvarno\Router;
 
 /** SPL use block. */
-use Atanvarno\Router\Exception\MethodNotAllowedException;
-use Atanvarno\Router\Exception\NotFoundException;
 use InvalidArgumentException;
 
 /** PSR-7 use block */
@@ -18,6 +16,11 @@ use Psr\Http\Message\RequestInterface;
 
 /** HTTP Message Utilities use block. */
 use Fig\Http\Message\RequestMethodInterface;
+
+/** Package use block. */
+use Atanvarno\Router\Exception\{
+    MethodNotAllowedException, NotFoundException
+};
 
 /**
  * Atanvarno\Router\Router

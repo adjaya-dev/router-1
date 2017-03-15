@@ -19,8 +19,8 @@ class MethodNotAllowedException extends UnexpectedValueException
     public function __construct(array $allowed, string $actual)
     {
         $this->allowed = $allowed;
-        $msg = sprintf('$s is not allowed for this route', $actual);
-        parent::__construct($msg, 405);
+        $msg = sprintf('%s is not allowed for this route', $actual);
+        parent::__construct($msg);
     }
 
     /**
