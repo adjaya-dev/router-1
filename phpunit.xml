@@ -7,7 +7,7 @@
          processIsolation="false"
          stopOnFailure="false">
     <testsuites>
-        <testsuite name="Atanvarno\Dependency test suite">
+        <testsuite name="Atanvarno\Router test suite">
             <directory>tests</directory>
         </testsuite>
     </testsuites>
