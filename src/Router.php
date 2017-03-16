@@ -31,7 +31,7 @@ use Atanvarno\Router\Exception\{
  *
  * @api
  */
-interface Router
+interface Router extends RequestMethodInterface
 {
     /** @const string CHAR_COUNT Specifies the character count based driver. */
     const CHAR_COUNT = 'CharCountBased';
@@ -55,16 +55,16 @@ interface Router
 
     /** @const string[] VALID_HTTP_METHODS List of valid HTTP methods. */
     const VALID_HTTP_METHODS = [
-        RequestMethodInterface::METHOD_CONNECT,
-        RequestMethodInterface::METHOD_DELETE,
-        RequestMethodInterface::METHOD_GET,
-        RequestMethodInterface::METHOD_HEAD,
-        RequestMethodInterface::METHOD_OPTIONS,
-        RequestMethodInterface::METHOD_PATCH,
-        RequestMethodInterface::METHOD_POST,
-        RequestMethodInterface::METHOD_PURGE,
-        RequestMethodInterface::METHOD_PUT,
-        RequestMethodInterface::METHOD_TRACE,
+        self::METHOD_CONNECT,
+        self::METHOD_DELETE,
+        self::METHOD_GET,
+        self::METHOD_HEAD,
+        self::METHOD_OPTIONS,
+        self::METHOD_PATCH,
+        self::METHOD_POST,
+        self::METHOD_PURGE,
+        self::METHOD_PUT,
+        self::METHOD_TRACE,
     ];
 
     /**

@@ -13,33 +13,40 @@ use Psr\SimpleCache\CacheInterface;
 
 class CachedRouter extends SimpleRouter
 {
-    private $cache, $cacheKey, $cacheDisabled;
+    private $cache, $cacheKey, $cacheDisable;
 
     public function __construct(
         CacheInterface $cache,
         string $cacheKey = 'routerData',
         $driver = Router::GROUP_COUNT,
         array $routes = [],
-        bool $cacheDisabled = false
+        bool $cacheDisable = false
     ) {
         $this->cache = $cache;
         $this->cacheKey = $cacheKey;
-        $this->cacheDisabled = $cacheDisabled;
+        $this->cacheDisable = $cacheDisable;
         parent::__construct($driver, $routes);
+    }
+
+    public function refreshCache(): bool
+    {
+        $dispatchData = parent::getDispatchData();
+        return $this->cache->set($this->cacheKey, $dispatchData);
     }
 
     /** @internal */
     protected function getDispatchData(): array
     {
-        if ($this->cacheDisabled) {
-            return parent::getDispatchData();
+        if (!$this->cacheDisable) {
+            $dispatchData = $this->cache->get($this->cacheKey, null);
+            if (!is_array($dispatchData)) {
+                $this->refreshCache();
+                $dispatchData = $this->cache->get($this->cacheKey, null);
+            }
+            if (is_array($dispatchData)) {
+                return $dispatchData;
+            }
         }
-        $dispatchData = $this->cache->get($this->cacheKey);
-        if (is_array($dispatchData)) {
-            return $dispatchData;
-        }
-        $dispatchData = parent::getDispatchData();
-        $this->cache->set($this->cacheKey, $dispatchData);
-        return $dispatchData;
+        return parent::getDispatchData();
     }
 }
