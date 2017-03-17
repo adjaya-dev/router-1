@@ -9,7 +9,7 @@
 namespace Atanvarno\Router\Test;
 
 /** SPL use block. */
-use UnexpectedValueException;
+use Throwable;
 
 /** HTTP Message Utilities use block. */
 use Fig\Http\Message\RequestMethodInterface;
@@ -18,7 +18,9 @@ use Fig\Http\Message\RequestMethodInterface;
 use PHPUnit\Framework\TestCase;
 
 /** Package use block. */
-use Atanvarno\Router\Exception\MethodNotAllowedException;
+use Atanvarno\Router\Exception\{
+    MethodNotAllowedException, RouterException
+};
 
 class MethodNotAllowedExceptionTest extends TestCase
 {
@@ -35,12 +37,14 @@ class MethodNotAllowedExceptionTest extends TestCase
         );
     }
 
-    public function testExtendsOutOfBoundsException()
+    public function testImplementsRouterException()
     {
-        $this->assertInstanceOf(
-            UnexpectedValueException::class,
-            $this->exception
-        );
+        $this->assertInstanceOf(RouterException::class, $this->exception);
+    }
+
+    public function testIsThrowable()
+    {
+        $this->assertInstanceOf(Throwable::class, $this->exception);
     }
 
     public function testCaught()
@@ -48,8 +52,7 @@ class MethodNotAllowedExceptionTest extends TestCase
         try {
             throw $this->exception;
         } catch (MethodNotAllowedException $caught) {
-            $this->assertInstanceOf(UnexpectedValueException::class, $caught);
-            $expectedMessage = 'POST is not allowed for this route';
+            $expectedMessage = 'Method POST is not allowed for this route';
             $this->assertSame($expectedMessage, $caught->getMessage());
             $expectedAllowed = [
                 RequestMethodInterface::METHOD_GET,

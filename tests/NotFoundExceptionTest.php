@@ -9,19 +9,27 @@
 namespace Atanvarno\Router\Test;
 
 /** SPL use block. */
-use OutOfBoundsException;
+use Throwable;
 
 /** PHP Unit use block. */
 use PHPUnit\Framework\TestCase;
 
 /** Package use block. */
-use Atanvarno\Router\Exception\NotFoundException;
+use Atanvarno\Router\Exception\{
+    NotFoundException, RouterException
+};
 
 class NotFoundExceptionTest extends TestCase
 {
-    public function testExtendsOutOfBoundsException()
+    public function testImplementsRouterException()
     {
         $exception = new NotFoundException();
-        $this->assertInstanceOf(OutOfBoundsException::class, $exception);
+        $this->assertInstanceOf(RouterException::class, $exception);
+    }
+
+    public function testIsThrowable()
+    {
+        $exception = new NotFoundException();
+        $this->assertInstanceOf(Throwable::class, $exception);
     }
 }

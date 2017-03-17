@@ -9,6 +9,7 @@
 namespace Atanvarno\Router\Test;
 
 /** PSR-16 use block. */
+use FastRoute\Dispatcher;
 use Psr\SimpleCache\CacheInterface;
 
 /** PSR-17 use block. */
@@ -72,7 +73,7 @@ class CachedRouterTest extends TestCase
             'handler'
         );
         $result = $this->router->dispatch($this->request);
-        $expected = ['handler', ['name' => 'test']];
+        $expected = [Dispatcher::FOUND, 'handler', ['name' => 'test']];
         $this->assertSame($expected, $result);
         $this->assertTrue($this->cache->has('routerData'));
     }
@@ -99,7 +100,7 @@ class CachedRouterTest extends TestCase
         ];
         $this->cache->set('routerData', $data);
         $result = $this->router->dispatch($this->request);
-        $expected = ['handler', ['name' => 'test']];
+        $expected = [Dispatcher::FOUND, 'handler', ['name' => 'test']];
         $this->assertSame($expected, $result);
     }
 
@@ -108,7 +109,7 @@ class CachedRouterTest extends TestCase
         $router = new CachedRouter(
             $this->cache,
             'routerData',
-            Router::GROUP_COUNT,
+            Router::DRIVER_GROUP_COUNT,
             [
                 [
                     RequestMethodInterface::METHOD_HEAD,
@@ -119,7 +120,7 @@ class CachedRouterTest extends TestCase
             true
         );
         $result = $router->dispatch($this->request);
-        $expected = ['handler', ['name' => 'test']];
+        $expected = [Dispatcher::FOUND, 'handler', ['name' => 'test']];
         $this->assertSame($expected, $result);
         $this->assertFalse($this->cache->has('routerData'));
     }

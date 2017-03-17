@@ -9,6 +9,7 @@
 namespace Atanvarno\Router\Test;
 
 /** PSR-17 use block. */
+use FastRoute\Dispatcher;
 use Http\Factory\Diactoros\{
     RequestFactory, UriFactory
 };
@@ -60,14 +61,14 @@ class SimpleRouterTest extends TestCase
     public function testConstructorRejectsNonArrayRouteDefinition()
     {
         $this->expectException(InvalidArgumentException::class);
-        new SimpleRouter(Router::GROUP_COUNT, ['route']);
+        new SimpleRouter(Router::DRIVER_GROUP_COUNT, ['route']);
     }
 
     public function testConstructorRejectsTooShortRouteDefinition()
     {
         $this->expectException(InvalidArgumentException::class);
         new SimpleRouter(
-            Router::GROUP_COUNT,
+            Router::DRIVER_GROUP_COUNT,
             [[RequestMethodInterface::METHOD_HEAD, '/pattern']]
         );
     }
@@ -76,7 +77,7 @@ class SimpleRouterTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         new SimpleRouter(
-            Router::GROUP_COUNT,
+            Router::DRIVER_GROUP_COUNT,
             [
                 [
                     RequestMethodInterface::METHOD_HEAD,
@@ -92,7 +93,7 @@ class SimpleRouterTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         new SimpleRouter(
-            Router::GROUP_COUNT,
+            Router::DRIVER_GROUP_COUNT,
             [['invalid', '/pattern', 'handler']]
         );
     }
@@ -106,7 +107,7 @@ class SimpleRouterTest extends TestCase
             [RequestMethodInterface::METHOD_HEAD, '/pattern', 'handler'],
         ];
         $this->assertAttributeEquals($expected, 'routes', $this->router);
-        $this->assertTrue($result);
+        $this->assertSame($this->router, $result);
     }
 
     public function testAddWithArrayMethods()
@@ -180,7 +181,7 @@ class SimpleRouterTest extends TestCase
             $this->router->add($method, '/{name}/uri', 'handler');
             $request = (new RequestFactory())->createRequest($method, $uri);
             $result = $this->router->dispatch($request);
-            $expected = ['handler', ['name' => 'test']];
+            $expected = [Dispatcher::FOUND, 'handler', ['name' => 'test']];
             $this->assertSame($expected, $result);
             $this->setUp();
         }
@@ -191,8 +192,9 @@ class SimpleRouterTest extends TestCase
         $uri = (new UriFactory())->createUri('http://atanvarno.com/test/uri/');
         $request = (new RequestFactory())
             ->createRequest(RequestMethodInterface::METHOD_HEAD, $uri);
-        $this->expectException(NotFoundException::class);
-        $this->router->dispatch($request);
+        $result = $this->router->dispatch($request);
+        $expected = [Dispatcher::NOT_FOUND];
+        $this->assertSame($expected, $result);
     }
 
     public function testDispatchWithNotAllowed()
@@ -203,8 +205,32 @@ class SimpleRouterTest extends TestCase
         $uri = (new UriFactory())->createUri('http://atanvarno.com/test/uri/');
         $request = (new RequestFactory())
             ->createRequest(RequestMethodInterface::METHOD_POST, $uri);
+        $result = $this->router->dispatch($request);
+        $expected = [
+            Dispatcher::METHOD_NOT_ALLOWED, [RequestMethodInterface::METHOD_GET]
+        ];
+        $this->assertSame($expected, $result);
+    }
+
+    public function testDispatchExceptionNotFound()
+    {
+        $uri = (new UriFactory())->createUri('http://atanvarno.com/test/uri/');
+        $request = (new RequestFactory())
+            ->createRequest(RequestMethodInterface::METHOD_HEAD, $uri);
+        $this->expectException(NotFoundException::class);
+        $this->router->dispatch($request, true);
+    }
+
+    public function testDispatchExceptionNotAllowed()
+    {
+        $this->router->add(
+            RequestMethodInterface::METHOD_GET, '/{name}/uri', 'handler'
+        );
+        $uri = (new UriFactory())->createUri('http://atanvarno.com/test/uri/');
+        $request = (new RequestFactory())
+            ->createRequest(RequestMethodInterface::METHOD_POST, $uri);
         $this->expectException(MethodNotAllowedException::class);
-        $this->router->dispatch($request);
+        $this->router->dispatch($request, true);
     }
 
     public function testConnect()
@@ -214,7 +240,7 @@ class SimpleRouterTest extends TestCase
             [RequestMethodInterface::METHOD_CONNECT, '/pattern', 'handler'],
         ];
         $this->assertAttributeEquals($expected, 'routes', $this->router);
-        $this->assertTrue($result);
+        $this->assertSame($this->router, $result);
     }
 
     public function testDelete()
@@ -224,7 +250,7 @@ class SimpleRouterTest extends TestCase
             [RequestMethodInterface::METHOD_DELETE, '/pattern', 'handler'],
         ];
         $this->assertAttributeEquals($expected, 'routes', $this->router);
-        $this->assertTrue($result);
+        $this->assertSame($this->router, $result);
     }
 
     public function testGet()
@@ -234,7 +260,7 @@ class SimpleRouterTest extends TestCase
             [RequestMethodInterface::METHOD_GET, '/pattern', 'handler'],
         ];
         $this->assertAttributeEquals($expected, 'routes', $this->router);
-        $this->assertTrue($result);
+        $this->assertSame($this->router, $result);
     }
 
     public function testHead()
@@ -244,7 +270,7 @@ class SimpleRouterTest extends TestCase
             [RequestMethodInterface::METHOD_HEAD, '/pattern', 'handler'],
         ];
         $this->assertAttributeEquals($expected, 'routes', $this->router);
-        $this->assertTrue($result);
+        $this->assertSame($this->router, $result);
     }
 
     public function testOptions()
@@ -254,7 +280,7 @@ class SimpleRouterTest extends TestCase
             [RequestMethodInterface::METHOD_OPTIONS, '/pattern', 'handler'],
         ];
         $this->assertAttributeEquals($expected, 'routes', $this->router);
-        $this->assertTrue($result);
+        $this->assertSame($this->router, $result);
     }
 
     public function testPatch()
@@ -264,7 +290,7 @@ class SimpleRouterTest extends TestCase
             [RequestMethodInterface::METHOD_PATCH, '/pattern', 'handler'],
         ];
         $this->assertAttributeEquals($expected, 'routes', $this->router);
-        $this->assertTrue($result);
+        $this->assertSame($this->router, $result);
     }
 
     public function testPost()
@@ -274,7 +300,7 @@ class SimpleRouterTest extends TestCase
             [RequestMethodInterface::METHOD_POST, '/pattern', 'handler'],
         ];
         $this->assertAttributeEquals($expected, 'routes', $this->router);
-        $this->assertTrue($result);
+        $this->assertSame($this->router, $result);
     }
 
     public function testPurge()
@@ -284,7 +310,7 @@ class SimpleRouterTest extends TestCase
             [RequestMethodInterface::METHOD_PURGE, '/pattern', 'handler'],
         ];
         $this->assertAttributeEquals($expected, 'routes', $this->router);
-        $this->assertTrue($result);
+        $this->assertSame($this->router, $result);
     }
 
     public function testPut()
@@ -294,7 +320,7 @@ class SimpleRouterTest extends TestCase
             [RequestMethodInterface::METHOD_PUT, '/pattern', 'handler'],
         ];
         $this->assertAttributeEquals($expected, 'routes', $this->router);
-        $this->assertTrue($result);
+        $this->assertSame($this->router, $result);
     }
 
     public function testTrace()
@@ -304,6 +330,6 @@ class SimpleRouterTest extends TestCase
             [RequestMethodInterface::METHOD_TRACE, '/pattern', 'handler'],
         ];
         $this->assertAttributeEquals($expected, 'routes', $this->router);
-        $this->assertTrue($result);
+        $this->assertSame($this->router, $result);
     }
 }

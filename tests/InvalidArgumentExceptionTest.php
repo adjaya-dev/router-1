@@ -9,19 +9,27 @@
 namespace Atanvarno\Router\Test;
 
 /** SPL use block. */
-use InvalidArgumentException as SplInvalidArgumentException;
+use Throwable;
 
 /** PHP Unit use block. */
 use PHPUnit\Framework\TestCase;
 
 /** Package use block. */
-use Atanvarno\Router\Exception\InvalidArgumentException;
+use Atanvarno\Router\Exception\{
+    InvalidArgumentException, RouterException
+};
 
 class InvalidArgumentExceptionTest extends TestCase
 {
-    public function testExtendsSplInvalidArgumentException()
+    public function testImplementsRouterException()
     {
         $exception = new InvalidArgumentException();
-        $this->assertInstanceOf(SplInvalidArgumentException::class, $exception);
+        $this->assertInstanceOf(RouterException::class, $exception);
+    }
+
+    public function testIsThrowable()
+    {
+        $exception = new InvalidArgumentException();
+        $this->assertInstanceOf(Throwable::class, $exception);
     }
 }

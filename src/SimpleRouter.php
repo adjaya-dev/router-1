@@ -71,8 +71,8 @@ class SimpleRouter implements Router
     /** @inheritdoc */
     public function add($methods, string $pattern, $handler): Router
     {
-        $methods = (array) $methods;
-        foreach ($methods as $key => $method) {
+        $checkMethods = (array) $methods;
+        foreach ($checkMethods as $key => $method) {
             if (!is_string($method)) {
                 $msg = sprintf('Method %u is not a string', $key);
                 throw new InvalidArgumentException($msg);
