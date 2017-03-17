@@ -9,18 +9,38 @@
 namespace Atanvarno\Router\Exception;
 
 /** SPL use block. */
-use UnexpectedValueException;
+use Exception, Throwable;
 
-class MethodNotAllowedException extends UnexpectedValueException
+/**
+ * Atanvarno\Router\Exception\MethodNotAllowedException
+ *
+ * Thrown when a route is matched but uses an invalid HTTP method. The user
+ * should return a `405 Method Not Allowed` error response.
+ *
+ * Note: a `405` response is required to include an `Allow:` header listing
+ * valid methods for the requested URL. You can use the `getAllowed()` method.
+ *
+ * @api
+ */
+class MethodNotAllowedException extends Exception implements RouterException
 {
-    /** @var string[] $allowed Allowed HTTP methods. */
+    /**
+     * @internal class property.
+     *
+     * @var string[] $allowed Allowed HTTP methods.
+     */
     protected $allowed;
 
-    public function __construct(array $allowed, string $actual)
-    {
+    /** @internal */
+    public function __construct(
+        array $allowed,
+        string $actual,
+        int $code = 0,
+        Throwable $previous  = null
+    ) {
         $this->allowed = $allowed;
-        $msg = sprintf('%s is not allowed for this route', $actual);
-        parent::__construct($msg);
+        $msg = sprintf('Method %s is not allowed for this route', $actual);
+        parent::__construct($msg, $code, $previous);
     }
 
     /**

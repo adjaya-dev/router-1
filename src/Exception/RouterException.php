@@ -8,18 +8,14 @@
 
 namespace Atanvarno\Router\Exception;
 
-/** SPL use block. */
-use Exception;
-
 /**
- * Atanvarno\Router\Exception\NotFoundException
+ * Atanvarno\Router\Exception\RouterException
  *
- * Thrown when a route could not be matched. The user SHOULD return a `404
- * Not Found` error response.
+ * Base interface for all exceptions thrown.
  *
  * @api
  */
-class NotFoundException extends Exception implements RouterException
+interface RouterException
 {
 
 }

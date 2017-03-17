@@ -9,14 +9,16 @@
 namespace Atanvarno\Router\Exception;
 
 /** SPL use block. */
-use InvalidArgumentException as SplInvalidArgumentException;
+use Exception;
 
 /**
  * Atanvarno\Router\Exception\InvalidArgumentException
  *
+ * Thrown when an argument passed by the user is invalid.
+ *
  * @api
  */
-class InvalidArgumentException extends SplInvalidArgumentException
+class InvalidArgumentException extends Exception implements RouterException
 {
 
 }
