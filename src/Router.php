@@ -25,7 +25,7 @@ use Atanvarno\Router\Exception\{
 /**
  * Atanvarno\Router\Router
  *
- * Interface for a PSR-7 HTTP request router built on top of FastRoute.
+ * Interface for PSR-7 HTTP request routers built on top of FastRoute.
  *
  * @see https://github.com/nikic/FastRoute
  *
@@ -34,26 +34,34 @@ use Atanvarno\Router\Exception\{
 interface Router extends RequestMethodInterface
 {
     /** @const string CHAR_COUNT Specifies the character count based driver. */
-    const CHAR_COUNT = 'CharCountBased';
+    const DRIVER_CHAR_COUNT = 'CharCountBased';
 
     /** @const string GROUP_COUNT Specifies the group count based driver. */
-    const GROUP_COUNT = 'GroupCountBased';
+    const DRIVER_GROUP_COUNT = 'GroupCountBased';
 
     /** @const string GROUP_POS Specifies the group position based driver. */
-    const GROUP_POS = 'GroupPosBased';
+    const DRIVER_GROUP_POS = 'GroupPosBased';
 
     /** @const string MARK Specifies the mark based driver. */
-    const MARK = 'MarkBased';
+    const DRIVER_MARK = 'MarkBased';
 
-    /** @const string[] VALID_DRIVERS List of valid FastRoute drivers. */
+    /**
+     * @internal Driver validation constant.
+     *
+     * @const string[] VALID_DRIVERS List of valid FastRoute drivers.
+     */
     const VALID_DRIVERS = [
-        Router::CHAR_COUNT,
-        Router::GROUP_COUNT,
-        Router::GROUP_POS,
-        Router::MARK,
+        self::DRIVER_CHAR_COUNT,
+        self::DRIVER_GROUP_COUNT,
+        self::DRIVER_GROUP_POS,
+        self::DRIVER_MARK,
     ];
 
-    /** @const string[] VALID_HTTP_METHODS List of valid HTTP methods. */
+    /**
+     * @internal HTTP method validation constant.
+     *
+     * @const string[] VALID_HTTP_METHODS List of valid HTTP methods.
+     */
     const VALID_HTTP_METHODS = [
         self::METHOD_CONNECT,
         self::METHOD_DELETE,
@@ -70,136 +78,243 @@ interface Router extends RequestMethodInterface
     /**
      * Adds a route.
      *
-     * @param string|string[] $httpMethods  HTTP method(s) for the route.
-     * @param string          $pattern      URL path pattern for the route.
-     * @param mixed           $handler      Any arbitrary value for `dispatch()`
-     *      to return when the route is matched. 
+     * Accepts an uppercase HTTP method string for which a certain route
+     * should match. It is possible to specify multiple valid methods using
+     * an array. You may use the `Router::METHOD_*` constants here.
      *
-     * @throws InvalidArgumentException HTTP method is not valid.
+     * Accepts a pattern to match against a URL path. By default the pattern
+     * uses a syntax where `{foo}` specifies a placeholder with name `foo` and
+     * matching the regex `[^/]+`. To adjust the pattern the placeholder
+     * matches, you can specify a custom pattern by writing `{bar:[0-9]+}`. Some
+     * examples:
      *
-     * @return bool `true` on successful add, `false` otherwise.
+     * ```php
+     * // Matches /user/42, but not /user/xyz
+     * $router->add(Router::METHOD_GET, '/user/{id:\d+}', 'handler');
+     *
+     * // Matches /user/foobar, but not /user/foo/bar
+     * $router->add(Router::METHOD_GET, '/user/{name}', 'handler');
+     *
+     * // Matches /user/foo/bar as well
+     * $router->add(Router::METHOD_GET, '/user/{name:.+}', 'handler');
+     * ```
+     *
+     * Custom patterns for route placeholders cannot use capturing groups. For
+     * example `{lang:(en|de)}` is not a valid placeholder, because `()` is a
+     * capturing group. Instead you can use either `{lang:en|de}` or
+     * `{lang:(?:en|de)}`.
+     *
+     * Furthermore parts of the route enclosed in `[...]` are considered
+     * optional, so that `/foo[bar]` will match both `/foo` and `/foobar`.
+     * Optional parts are only supported in a trailing position, not in the
+     * middle of a route.
+     *
+     * ```php
+     * // This route
+     * $router->add(Router::METHOD_GET, '/user/{id:\d+}[/{name}]', 'handler');
+     * // Is equivalent to these two routes
+     * $router->add(Router::METHOD_GET, '/user/{id:\d+}', 'handler');
+     * $router->add(Router::METHOD_GET, '/user/{id:\d+}/{name}', 'handler');
+     *
+     * // Multiple nested optional parts are possible as well
+     * $router->add(Router::METHOD_GET, '/user[/{id:\d+}[/{name}]]', 'handler');
+     *
+     * // This route is NOT valid, as optional parts can only occur at the end
+     * $router->add(Router::METHOD_GET, '/user[/{id:\d+}]/{name}', 'handler');
+     * ```
+     *
+     * Accepts a handler of any value. The handler does not necessarily have to
+     * be a callback, it could also be a controller class name or any other kind
+     * of data you wish to associate with the route. The `dispatch()` method
+     * only tells you which handler corresponds to your URI, how you interpret
+     * it is up to you.
+     *
+     * @param string|string[] $methods HTTP method(s) for the route.
+     * @param string          $pattern URL path pattern for the route.
+     * @param mixed           $handler Any arbitrary handler value.
+     *
+     * @throws InvalidArgumentException HTTP method is invalid.
+     *
+     * @return $this Fluent interface.
      */
-    public function add($httpMethods, string $pattern, $handler): bool;
+    public function add($methods, string $pattern, $handler): Router;
 
     /**
-     * Dispatches a request.
+     * Adds a group of routes.
      *
-     * @param RequestInterface $request PSR-7 request to dispatch.
+     * All routes defined inside a group will have a common prefix. For example:
+     * ```php
+     * $router->addGroup(
+     *     '/admin',
+     *     [
+     *         [Router::METHOD_GET, '/do-something', 'handler'],
+     *         [Router::METHOD_GET, '/do-another-thing', 'handler'],
+     *         [Router::METHOD_GET, '/do-something-else', 'handler'],
+     *     ]
+     * );
+     * // Will have the same result as:
+     * $router->add(Router::METHOD_GET, '/admin/do-something', 'handler');
+     * $router->add(Router::METHOD_GET, '/admin/do-another-thing', 'handler');
+     * $router->add(Router::METHOD_GET, '/admin/do-something-else', 'handler');
+     * ```
+     *
+     * @param string $patternPrefix Group prefix pattern.
+     * @param array  $routes        Array of `add()` parameter values.
+     *
+     * @throws InvalidArgumentException Routes array is invalid.
+     *
+     * @return $this Fluent interface.
+     */
+    public function addGroup(string $patternPrefix, array $routes): Router;
+
+    /**
+     * Dispatches a PSR-7 request.
+     *
+     * Returns an array whose first element contains a status code, one of:
+     * + `FastRoute\Dispatcher::NOT_FOUND`
+     * + `FastRoute\Dispatcher::METHOD_NOT_ALLOWED`
+     * + `FastRoute\Dispatcher::FOUND`
+     *
+     * For the method not allowed status the second array element contains a
+     * list of HTTP methods allowed for the supplied request's URI. For example:
+     * ```php
+     * [
+     *     FastRoute\Dispatcher::METHOD_NOT_ALLOWED,
+     *     [Router::METHOD_GET, Router::METHOD_POST]
+     * ]
+     * ```
+     *
+     * **NOTE:** The HTTP specification requires that a `405 Method Not Allowed`
+     * response include the `Allow:` header to detail available methods for the
+     * requested resource. Applications using `Atanvarno\Router` should use the
+     * second array element to add this header when relaying a `405` response.
+     *
+     * For the found status the second array element is the handler that was
+     * associated with the route and the third array element is a dictionary of
+     * placeholder names to their values. For example:
+     * ```php
+     * // Routing against GET /user/atanvarno/42
+     * [
+     *     FastRoute\Dispatcher::FOUND,
+     *     'handler0',
+     *     ['name' => 'atanvarno', 'id' => '42']
+     * ]
+     * ```
+     *
+     * `dispatch()` can instead return only a found status array. For not
+     * found and not allowed statuses, exceptions can be thrown. Use the
+     * second parameter to enable this behaviour.
+     *
+     * @param RequestInterface $request    PSR-7 request to dispatch.
+     * @param bool             $exceptions Pass `true` to enable exceptions.
      *
      * @throws NotFoundException         The given request could not be matched.
      * @throws MethodNotAllowedException Requested HTTP method is not allowed.
      *
-     * @return mixed The given handler for the matched route.
+     * @return array The dispatch result array.
      */
-    public function dispatch(RequestInterface $request);
+    public function dispatch(
+        RequestInterface $request,
+        bool $exceptions = false
+    ): array;
 
     /**
-     * Adds a CONNECT route.
+     * Adds a `CONNECT` method route.
      *
      * @param string $pattern URL path pattern for the route.
-     * @param mixed  $handler Any arbitrary value for `dispatch()` to return
-     *      when the route is matched.
+     * @param mixed  $handler Any arbitrary handler value.
      *
-     * @return bool `true` on successful add, `false` otherwise.
+     * @return $this Fluent interface.
      */
-    public function connect(string $pattern, $handler): bool;
+    public function connect(string $pattern, $handler): Router;
 
     /**
-     * Adds a DELETE route.
+     * Adds a `DELETE` method route.
      *
      * @param string $pattern URL path pattern for the route.
-     * @param mixed  $handler Any arbitrary value for `dispatch()` to return
-     *      when the route is matched.
+     * @param mixed  $handler Any arbitrary handler value.
      *
-     * @return bool `true` on successful add, `false` otherwise.
+     * @return $this Fluent interface.
      */
-    public function delete(string $pattern, $handler): bool;
+    public function delete(string $pattern, $handler): Router;
 
     /**
-     * Adds a GET route.
+     * Adds a `GET` method route.
      *
      * @param string $pattern URL path pattern for the route.
-     * @param mixed  $handler Any arbitrary value for `dispatch()` to return
-     *      when the route is matched.
+     * @param mixed  $handler Any arbitrary handler value.
      *
-     * @return bool `true` on successful add, `false` otherwise.
+     * @return $this Fluent interface.
      */
-    public function get(string $pattern, $handler): bool;
+    public function get(string $pattern, $handler): Router;
 
     /**
-     * Adds a HEAD route.
+     * Adds a `HEAD` method route.
      *
      * @param string $pattern URL path pattern for the route.
-     * @param mixed  $handler Any arbitrary value for `dispatch()` to return
-     *      when the route is matched.
+     * @param mixed  $handler Any arbitrary handler value.
      *
-     * @return bool `true` on successful add, `false` otherwise.
+     * @return $this Fluent interface.
      */
-    public function head(string $pattern, $handler): bool;
+    public function head(string $pattern, $handler): Router;
 
     /**
-     * Adds a OPTIONS route.
+     * Adds a `OPTIONS` method route.
      *
      * @param string $pattern URL path pattern for the route.
-     * @param mixed  $handler Any arbitrary value for `dispatch()` to return
-     *      when the route is matched.
+     * @param mixed  $handler Any arbitrary handler value.
      *
-     * @return bool `true` on successful add, `false` otherwise.
+     * @return $this Fluent interface.
      */
-    public function options(string $pattern, $handler): bool;
+    public function options(string $pattern, $handler): Router;
 
     /**
-     * Adds a PATCH route.
+     * Adds a `PATCH` method route.
      *
      * @param string $pattern URL path pattern for the route.
-     * @param mixed  $handler Any arbitrary value for `dispatch()` to return
-     *      when the route is matched.
+     * @param mixed  $handler Any arbitrary handler value.
      *
-     * @return bool `true` on successful add, `false` otherwise.
+     * @return $this Fluent interface.
      */
-    public function patch(string $pattern, $handler): bool;
+    public function patch(string $pattern, $handler): Router;
 
     /**
-     * Adds a POST route.
+     * Adds a `POST` method route.
      *
      * @param string $pattern URL path pattern for the route.
-     * @param mixed  $handler Any arbitrary value for `dispatch()` to return
-     *      when the route is matched.
+     * @param mixed  $handler Any arbitrary handler value.
      *
-     * @return bool `true` on successful add, `false` otherwise.
+     * @return $this Fluent interface.
      */
-    public function post(string $pattern, $handler): bool;
+    public function post(string $pattern, $handler): Router;
 
     /**
-     * Adds a PURGE route.
+     * Adds a `PURGE` method route.
      *
      * @param string $pattern URL path pattern for the route.
-     * @param mixed  $handler Any arbitrary value for `dispatch()` to return
-     *      when the route is matched.
+     * @param mixed  $handler Any arbitrary handler value.
      *
-     * @return bool `true` on successful add, `false` otherwise.
+     * @return $this Fluent interface.
      */
-    public function purge(string $pattern, $handler): bool;
+    public function purge(string $pattern, $handler): Router;
 
     /**
-     * Adds a PUT route.
+     * Adds a `PUT` method route.
      *
      * @param string $pattern URL path pattern for the route.
-     * @param mixed  $handler Any arbitrary value for `dispatch()` to return
-     *      when the route is matched.
+     * @param mixed  $handler Any arbitrary handler value.
      *
-     * @return bool `true` on successful add, `false` otherwise.
+     * @return $this Fluent interface.
      */
-    public function put(string $pattern, $handler): bool;
+    public function put(string $pattern, $handler): Router;
 
     /**
-     * Adds a TRACE route.
+     * Adds a `TRACE` method route.
      *
      * @param string $pattern URL path pattern for the route.
-     * @param mixed  $handler Any arbitrary value for `dispatch()` to return
-     *      when the route is matched.
+     * @param mixed  $handler Any arbitrary handler value.
      *
-     * @return bool `true` on successful add, `false` otherwise.
+     * @return $this Fluent interface.
      */
-    public function trace(string $pattern, $handler): bool;
+    public function trace(string $pattern, $handler): Router;
 }

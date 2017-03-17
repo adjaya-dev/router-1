@@ -27,32 +27,69 @@ use Atanvarno\Router\Exception\{
 /**
  * Atanvarno\Router\SimpleRouter
  *
+ * Simple implementation of `Router`.
+ *
  * @api
  */
 class SimpleRouter implements Router
 {
     /**
-     * @var string  $driver
-     * @var array[] $routes
+     * @internal Class properties.
+     *
+     * @var string  $driver FastRoute driver for dispatcher and data generator.
+     * @var array[] $routes Routes for the route collector.
      */
     protected $driver, $routes;
 
+    /**
+     * Builds a `SimpleRouter` instance.
+     *
+     * @throws InvalidArgumentException Driver is invalid.
+     * @throws InvalidArgumentException Routes array is invalid.
+     *
+     * @param string $driver FastRoute driver. You should use the
+     *      `Router::DRIVER_*` constants.
+     * @param array  $routes Array of `add()` parameter values.
+     */
     public function __construct(
-        string $driver = Router::GROUP_COUNT,
+        string $driver = Router::DRIVER_GROUP_COUNT,
         array $routes = []
     ) {
-        // Set driver
         if (!in_array($driver, Router::VALID_DRIVERS)) {
             $msg = sprintf('%s is not a valid FastRoute driver', $driver);
             throw new InvalidArgumentException($msg);
         }
         $this->driver = $driver;
-        $this->routes = [];
+        if (empty($routes)) {
+            $this->routes = [];
+        } else {
+            $routes = array_values($routes);
+            $this->addGroup('', $routes);
+        }
+    }
 
-        // Ensure routes array is numerically indexed.
-        $routes = array_values($routes);
+    /** @inheritdoc */
+    public function add($methods, string $pattern, $handler): Router
+    {
+        $methods = (array) $methods;
+        foreach ($methods as $key => $method) {
+            if (!is_string($method)) {
+                $msg = sprintf('Method %u is not a string', $key);
+                throw new InvalidArgumentException($msg);
+            }
+            if (!in_array($method, Router::VALID_HTTP_METHODS, true)) {
+                $msg = sprintf('%s is not a valid HTTP method', $method);
+                throw new InvalidArgumentException($msg);
+            }
+        }
+        $pattern = '/' . trim($pattern, ' /');
+        $this->routes[] = [$methods, $pattern, $handler];
+        return $this;
+    }
 
-        // Add given routes
+    /** @inheritdoc */
+    public function addGroup(string $patternPrefix, array $routes): Router
+    {
         foreach ($routes as $key => $route) {
             if (!is_array($route)) {
                 $msg = sprintf('Route %u is not an array', $key);
@@ -69,48 +106,34 @@ class SimpleRouter implements Router
                 throw new InvalidArgumentException($msg);
             }
         }
+        return $this;
     }
 
     /** @inheritdoc */
-    public function add($httpMethods, string $pattern, $handler): bool
-    {
-        $methods = (array) $httpMethods;
-        foreach ($methods as $key => $method) {
-            if (!is_string($method)) {
-                $msg = sprintf('Method %u is not a string', $key);
-                throw new InvalidArgumentException($msg);
-            }
-            if (!in_array($method, Router::VALID_HTTP_METHODS, true)) {
-                $msg = sprintf('%s is not a valid HTTP method', $method);
-                throw new InvalidArgumentException($msg);
-            }
-        }
-        $pattern = '/' . trim($pattern, ' /');
-        $this->routes[] = [$httpMethods, $pattern, $handler];
-        return true;
-    }
-
-    /** @inheritdoc */
-    public function dispatch(RequestInterface $request)
-    {
-        $dispatcher = $this->getDispatcher();
+    public function dispatch(
+        RequestInterface $request,
+        bool $exceptions = false
+    ): array {
+        $dispatcherName = 'FastRoute\\Dispatcher\\' . $this->driver;
+        /** @var Dispatcher $dispatcher */
+        $dispatcher = new $dispatcherName($this->getDispatchData());
         $method = $request->getMethod();
         $path = '/' . trim($request->getUri()->getPath(), ' /');
-        $result =  $dispatcher->dispatch($method, $path);
-        switch ($result[0]) {
-            case Dispatcher::NOT_FOUND:
+        $result = $dispatcher->dispatch($method, $path);
+        if ($exceptions) {
+            if ($result[0] === Dispatcher::NOT_FOUND) {
                 $msg = sprintf('Could not match %s', $path);
                 throw new NotFoundException($msg);
-            case Dispatcher::METHOD_NOT_ALLOWED:
+            }
+            if ($result[0] === Dispatcher::METHOD_NOT_ALLOWED) {
                 throw new MethodNotAllowedException($result[1], $method);
-            default: // No break
-            case Dispatcher::FOUND:
-                return [$result[1], $result[2]];
+            }
         }
+        return $result;
     }
 
     /** @inheritdoc */
-    public function connect(string $pattern, $handler): bool
+    public function connect(string $pattern, $handler): Router
     {
         return $this->add(
             RequestMethodInterface::METHOD_CONNECT,
@@ -120,7 +143,7 @@ class SimpleRouter implements Router
     }
 
     /** @inheritdoc */
-    public function delete(string $pattern, $handler): bool
+    public function delete(string $pattern, $handler): Router
     {
         return $this->add(
             RequestMethodInterface::METHOD_DELETE,
@@ -130,7 +153,7 @@ class SimpleRouter implements Router
     }
 
     /** @inheritdoc */
-    public function get(string $pattern, $handler): bool
+    public function get(string $pattern, $handler): Router
     {
         return $this->add(
             RequestMethodInterface::METHOD_GET,
@@ -140,7 +163,7 @@ class SimpleRouter implements Router
     }
 
     /** @inheritdoc */
-    public function head(string $pattern, $handler): bool
+    public function head(string $pattern, $handler): Router
     {
         return $this->add(
             RequestMethodInterface::METHOD_HEAD,
@@ -150,7 +173,7 @@ class SimpleRouter implements Router
     }
 
     /** @inheritdoc */
-    public function options(string $pattern, $handler): bool
+    public function options(string $pattern, $handler): Router
     {
         return $this->add(
             RequestMethodInterface::METHOD_OPTIONS,
@@ -160,7 +183,7 @@ class SimpleRouter implements Router
     }
 
     /** @inheritdoc */
-    public function patch(string $pattern, $handler): bool
+    public function patch(string $pattern, $handler): Router
     {
         return $this->add(
             RequestMethodInterface::METHOD_PATCH,
@@ -170,7 +193,7 @@ class SimpleRouter implements Router
     }
 
     /** @inheritdoc */
-    public function post(string $pattern, $handler): bool
+    public function post(string $pattern, $handler): Router
     {
         return $this->add(
             RequestMethodInterface::METHOD_POST,
@@ -180,7 +203,7 @@ class SimpleRouter implements Router
     }
 
     /** @inheritdoc */
-    public function purge(string $pattern, $handler): bool
+    public function purge(string $pattern, $handler): Router
     {
         return $this->add(
             RequestMethodInterface::METHOD_PURGE,
@@ -190,7 +213,7 @@ class SimpleRouter implements Router
     }
 
     /** @inheritdoc */
-    public function put(string $pattern, $handler): bool
+    public function put(string $pattern, $handler): Router
     {
         return $this->add(
             RequestMethodInterface::METHOD_PUT,
@@ -200,7 +223,7 @@ class SimpleRouter implements Router
     }
 
     /** @inheritdoc */
-    public function trace(string $pattern, $handler): bool
+    public function trace(string $pattern, $handler): Router
     {
         return $this->add(
             RequestMethodInterface::METHOD_TRACE,
@@ -220,12 +243,5 @@ class SimpleRouter implements Router
             $routeCollector->addRoute(...$route);
         }
         return $routeCollector->getData();
-    }
-
-    /** @internal */
-    protected function getDispatcher(): Dispatcher
-    {
-        $dispatcherName = 'FastRoute\\Dispatcher\\' . $this->driver;
-        return new $dispatcherName($this->getDispatchData());
     }
 }
