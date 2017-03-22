@@ -11,6 +11,9 @@ namespace Atanvarno\Router\Router;
 /** PSR-16 use block. */
 use Psr\SimpleCache\CacheInterface;
 
+/** Package use block. */
+use Atanvarno\Router\Router;
+
 /**
  * Atanvarno\Router\CachedRouter
  *
