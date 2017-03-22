@@ -9,7 +9,6 @@
 namespace Atanvarno\Router\Test;
 
 /** PSR-17 use block. */
-use FastRoute\Dispatcher;
 use Http\Factory\Diactoros\{
     RequestFactory, UriFactory
 };
@@ -19,6 +18,9 @@ use Fig\Http\Message\RequestMethodInterface;
 
 /** PHP Unit use block. */
 use PHPUnit\Framework\TestCase;
+
+/** FastRoute use block. */
+use FastRoute\Dispatcher;
 
 /** Package use block. */
 use Atanvarno\Router\{
