@@ -27,12 +27,12 @@ use Atanvarno\Router\Exception\InvalidArgumentException;
 class MethodNotAllowedResult extends BaseResult
 {
     /** @inheritdoc */
-    public function __construct(array $resultArray)
+    public function __construct(array $resultsArray)
     {
         if ($resultsArray[0] !== Dispatcher::FOUND) {
             throw new InvalidArgumentException();
         }
-        $this->allowed = $resultArray[1];
+        $this->allowed = $resultsArray[1];
         $this->attributes = [];
         $this->handler = null;
         $this->status = StatusCodeInterface::STATUS_METHOD_NOT_ALLOWED;
