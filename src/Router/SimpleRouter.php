@@ -123,7 +123,7 @@ class SimpleRouter implements Router
         $path = '/' . trim($request->getUri()->getPath(), ' /');
         $result = $dispatcher->dispatch($method, $path);
         switch ($result[0]) {
-            case default: // no break
+            default: // no break
             case Dispatcher::FOUND:
                 $return = new MatchedResult($result);
                 break;
