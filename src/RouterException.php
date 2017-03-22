@@ -6,7 +6,7 @@
  * @license   https://opensource.org/licenses/MIT The MIT License
  */
 
-namespace Atanvarno\Router\Exception;
+namespace Atanvarno\Router;
 
 /**
  * Atanvarno\Router\Exception\RouterException
