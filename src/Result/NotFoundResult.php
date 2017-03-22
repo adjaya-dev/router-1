@@ -27,7 +27,7 @@ use Atanvarno\Router\Exception\InvalidArgumentException;
 class NotFoundResult extends BaseResult
 {
     /** @inheritdoc */
-    public function __construct(array $resultArray)
+    public function __construct(array $resultsArray)
     {
         if ($resultsArray[0] !== Dispatcher::FOUND) {
             throw new InvalidArgumentException();
