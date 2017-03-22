@@ -27,6 +27,7 @@ use FastRoute\Dispatcher;
 
 /** Package use block. */
 use Atanvarno\Router\{
+    Result,
     Router,
     Router\CachedRouter
 };
@@ -75,8 +76,11 @@ class CachedRouterTest extends TestCase
             'handler'
         );
         $result = $this->router->dispatch($this->request);
-        $expected = [Dispatcher::FOUND, 'handler', ['name' => 'test']];
-        $this->assertSame($expected, $result);
+        $this->assertInstanceOf(Result::class, $result);
+        $this->assertSame([], $result->getAllowed());
+        $this->assertSame(['name' => 'test'], $result->getAttributes());
+        $this->assertSame('handler', $result->getHandler());
+        $this->assertSame(200, $result->getStatus());
         $this->assertTrue($this->cache->has('routerData'));
     }
 
@@ -102,8 +106,11 @@ class CachedRouterTest extends TestCase
         ];
         $this->cache->set('routerData', $data);
         $result = $this->router->dispatch($this->request);
-        $expected = [Dispatcher::FOUND, 'handler', ['name' => 'test']];
-        $this->assertSame($expected, $result);
+        $this->assertInstanceOf(Result::class, $result);
+        $this->assertSame([], $result->getAllowed());
+        $this->assertSame(['name' => 'test'], $result->getAttributes());
+        $this->assertSame('handler', $result->getHandler());
+        $this->assertSame(200, $result->getStatus());
     }
 
     public function testCacheDisabledUsesSimpleRouter()
@@ -122,8 +129,11 @@ class CachedRouterTest extends TestCase
             true
         );
         $result = $router->dispatch($this->request);
-        $expected = [Dispatcher::FOUND, 'handler', ['name' => 'test']];
-        $this->assertSame($expected, $result);
+        $this->assertInstanceOf(Result::class, $result);
+        $this->assertSame([], $result->getAllowed());
+        $this->assertSame(['name' => 'test'], $result->getAttributes());
+        $this->assertSame('handler', $result->getHandler());
+        $this->assertSame(200, $result->getStatus());
         $this->assertFalse($this->cache->has('routerData'));
     }
 }
