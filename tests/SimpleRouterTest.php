@@ -24,6 +24,7 @@ use FastRoute\Dispatcher;
 
 /** Package use block. */
 use Atanvarno\Router\{
+    Result,
     Router,
     Router\SimpleRouter
 };
@@ -183,8 +184,11 @@ class SimpleRouterTest extends TestCase
             $this->router->add($method, '/{name}/uri', 'handler');
             $request = (new RequestFactory())->createRequest($method, $uri);
             $result = $this->router->dispatch($request);
-            $expected = [Dispatcher::FOUND, 'handler', ['name' => 'test']];
-            $this->assertSame($expected, $result);
+            $this->assertInstanceOf(Result::class, $result);
+            $this->assertSame([], $result->getAllowed());
+            $this->assertSame(['name' => 'test'], $result->getAttributes());
+            $this->assertSame('handler', $result->getHandler());
+            $this->assertSame(200, $result->getStatus());
             $this->setUp();
         }
     }
@@ -195,8 +199,11 @@ class SimpleRouterTest extends TestCase
         $request = (new RequestFactory())
             ->createRequest(RequestMethodInterface::METHOD_HEAD, $uri);
         $result = $this->router->dispatch($request);
-        $expected = [Dispatcher::NOT_FOUND];
-        $this->assertSame($expected, $result);
+        $this->assertInstanceOf(Result::class, $result);
+        $this->assertSame([], $result->getAllowed());
+        $this->assertSame([], $result->getAttributes());
+        $this->assertSame(null, $result->getHandler());
+        $this->assertSame(404, $result->getStatus());
     }
 
     public function testDispatchWithNotAllowed()
@@ -208,31 +215,18 @@ class SimpleRouterTest extends TestCase
         $request = (new RequestFactory())
             ->createRequest(RequestMethodInterface::METHOD_POST, $uri);
         $result = $this->router->dispatch($request);
+        $this->assertInstanceOf(Result::class, $result);
+        $this->assertSame(
+            [RequestMethodInterface::METHOD_GET, RequestMethodInterface::METHOD_HEAD],
+            $result->getAllowed()
+        );
+        $this->assertSame([], $result->getAttributes());
+        $this->assertSame(null, $result->getHandler());
+        $this->assertSame(405, $result->getStatus());
         $expected = [
             Dispatcher::METHOD_NOT_ALLOWED, [RequestMethodInterface::METHOD_GET]
         ];
         $this->assertSame($expected, $result);
-    }
-
-    public function testDispatchExceptionNotFound()
-    {
-        $uri = (new UriFactory())->createUri('http://atanvarno.com/test/uri/');
-        $request = (new RequestFactory())
-            ->createRequest(RequestMethodInterface::METHOD_HEAD, $uri);
-        $this->expectException(NotFoundException::class);
-        $this->router->dispatch($request, true);
-    }
-
-    public function testDispatchExceptionNotAllowed()
-    {
-        $this->router->add(
-            RequestMethodInterface::METHOD_GET, '/{name}/uri', 'handler'
-        );
-        $uri = (new UriFactory())->createUri('http://atanvarno.com/test/uri/');
-        $request = (new RequestFactory())
-            ->createRequest(RequestMethodInterface::METHOD_POST, $uri);
-        $this->expectException(MethodNotAllowedException::class);
-        $this->router->dispatch($request, true);
     }
 
     public function testConnect()
