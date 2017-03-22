@@ -20,10 +20,13 @@ use FastRoute\{
 };
 
 /** Package use block. */
-use Atanvarno\Router\Exception\{
-    InvalidArgumentException, MethodNotAllowedException, NotFoundException
+use Atanvarno\Router\{
+    Exception\InvalidArgumentException,
+    Result\MatchedResult,
+    Result\NotFoundResult,
+    Result\MethodNotAllowedResult,
+    Router
 };
-use Atanvarno\Router\Router;
 
 /**
  * Atanvarno\Router\SimpleRouter
@@ -111,26 +114,26 @@ class SimpleRouter implements Router
     }
 
     /** @inheritdoc */
-    public function dispatch(
-        RequestInterface $request,
-        bool $exceptions = false
-    ): array {
+    public function dispatch(RequestInterface $request): array
+    {
         $dispatcherName = 'FastRoute\\Dispatcher\\' . $this->driver;
         /** @var Dispatcher $dispatcher */
         $dispatcher = new $dispatcherName($this->getDispatchData());
         $method = $request->getMethod();
         $path = '/' . trim($request->getUri()->getPath(), ' /');
         $result = $dispatcher->dispatch($method, $path);
-        if ($exceptions) {
-            if ($result[0] === Dispatcher::NOT_FOUND) {
-                $msg = sprintf('Could not match %s', $path);
-                throw new NotFoundException($msg);
-            }
-            if ($result[0] === Dispatcher::METHOD_NOT_ALLOWED) {
-                throw new MethodNotAllowedException($result[1], $method);
-            }
+        switch ($result[0]) {
+            case default: // no break
+            case Dispatcher::FOUND:
+                $return = new MatchedResult($result);
+                break;
+            case Dispatcher::NOT_FOUND:
+                $return = new NotFoundResult($result);
+                break;
+            case Dispatcher::METHOD_NOT_ALLOWED:
+                $return = MethodNotAllowedResult($result);
         }
-        return $result;
+        return $return;
     }
 
     /** @inheritdoc */
