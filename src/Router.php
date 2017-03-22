@@ -170,53 +170,13 @@ interface Router extends RequestMethodInterface
     /**
      * Dispatches a PSR-7 request.
      *
-     * Returns an array whose first element contains a status code, one of:
-     * + `FastRoute\Dispatcher::NOT_FOUND`
-     * + `FastRoute\Dispatcher::METHOD_NOT_ALLOWED`
-     * + `FastRoute\Dispatcher::FOUND`
+     * Returns a `Result` object.
      *
-     * For the method not allowed status the second array element contains a
-     * list of HTTP methods allowed for the supplied request's URI. For example:
-     * ```php
-     * [
-     *     FastRoute\Dispatcher::METHOD_NOT_ALLOWED,
-     *     [Router::METHOD_GET, Router::METHOD_POST]
-     * ]
-     * ```
+     * @param RequestInterface $request PSR-7 request to dispatch.
      *
-     * **NOTE:** The HTTP specification requires that a `405 Method Not Allowed`
-     * response include the `Allow:` header to detail available methods for the
-     * requested resource. Applications using `Atanvarno\Router` should use the
-     * second array element to add this header when relaying a `405` response.
-     *
-     * For the found status the second array element is the handler that was
-     * associated with the route and the third array element is a dictionary of
-     * placeholder names to their values. For example:
-     * ```php
-     * // Routing against GET /user/atanvarno/42
-     * [
-     *     FastRoute\Dispatcher::FOUND,
-     *     'handler0',
-     *     ['name' => 'atanvarno', 'id' => '42']
-     * ]
-     * ```
-     *
-     * `dispatch()` can instead return only a found status array. For not
-     * found and not allowed statuses, exceptions can be thrown. Use the
-     * second parameter to enable this behaviour.
-     *
-     * @param RequestInterface $request    PSR-7 request to dispatch.
-     * @param bool             $exceptions Pass `true` to enable exceptions.
-     *
-     * @throws NotFoundException         The given request could not be matched.
-     * @throws MethodNotAllowedException Requested HTTP method is not allowed.
-     *
-     * @return array The dispatch result array.
+     * @return Result The dispatch result object.
      */
-    public function dispatch(
-        RequestInterface $request,
-        bool $exceptions = false
-    ): array;
+    public function dispatch(RequestInterface $request): Result;
 
     /**
      * Adds a `CONNECT` method route.
