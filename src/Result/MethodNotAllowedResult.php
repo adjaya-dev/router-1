@@ -15,7 +15,10 @@ use Fig\Http\Message\StatusCodeInterface;
 use FastRoute\Dispatcher;
 
 /** Package use block. */
-use Atanvarno\Router\Exception\InvalidArgumentException;
+use Atanvarno\Router\{
+    Router,
+    Exception\InvalidArgumentException
+};
 
 /**
  * Atanvarno\Router\Result\MethodNotAllowedResult
