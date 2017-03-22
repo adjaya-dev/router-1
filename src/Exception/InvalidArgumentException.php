@@ -11,6 +11,9 @@ namespace Atanvarno\Router\Exception;
 /** SPL use block. */
 use Exception;
 
+/** Package use block. */
+use Atanvarno\Router\RouterException;
+
 /**
  * Atanvarno\Router\Exception\InvalidArgumentException
  *
