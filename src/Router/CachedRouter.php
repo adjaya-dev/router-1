@@ -6,7 +6,7 @@
  * @license   https://opensource.org/licenses/MIT The MIT License
  */
 
-namespace Atanvarno\Router;
+namespace Atanvarno\Router\Router;
 
 /** PSR-16 use block. */
 use Psr\SimpleCache\CacheInterface;
