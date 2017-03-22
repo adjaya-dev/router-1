@@ -27,14 +27,14 @@ use Atanvarno\Router\Exception\InvalidArgumentException;
 class MatchedResult extends BaseResult
 {
     /** @inheritdoc */
-    public function __construct(array $resultArray)
+    public function __construct(array $resultsArray)
     {
         if ($resultsArray[0] !== Dispatcher::FOUND) {
             throw new InvalidArgumentException();
         }
         $this->allowed = [];
-        $this->attributes = $resultArray[2];
-        $this->handler = $resultArray[1];
+        $this->attributes = $resultsArray[2];
+        $this->handler = $resultsArray[1];
         $this->status = StatusCodeInterface::STATUS_OK;
     }
 }
