@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
 /** Package use block. */
 use Atanvarno\Router\{
     Router,
-    SimpleRouter
+    Router\SimpleRouter
 };
 use Atanvarno\Router\Exception\{
     InvalidArgumentException, MethodNotAllowedException, NotFoundException
