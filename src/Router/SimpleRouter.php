@@ -6,7 +6,7 @@
  * @license   https://opensource.org/licenses/MIT The MIT License
  */
 
-namespace Atanvarno\Router;
+namespace Atanvarno\Router\Router;
 
 /** PSR-7 use block */
 use Psr\Http\Message\RequestInterface;
@@ -23,6 +23,7 @@ use FastRoute\{
 use Atanvarno\Router\Exception\{
     InvalidArgumentException, MethodNotAllowedException, NotFoundException
 };
+use Atanvarno\Router\Router;
 
 /**
  * Atanvarno\Router\SimpleRouter
