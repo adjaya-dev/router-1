@@ -132,7 +132,7 @@ class SimpleRouter implements Router
                 $return = new NotFoundResult($result);
                 break;
             case Dispatcher::METHOD_NOT_ALLOWED:
-                $return = MethodNotAllowedResult($result);
+                $return = new MethodNotAllowedResult($result);
         }
         return $return;
     }
