@@ -34,7 +34,7 @@ class NotFoundResult extends BaseResult
         }
         $this->allowed = [];
         $this->attributes = [];
-        $this->handler = [];
+        $this->handler = null;
         $this->status = StatusCodeInterface::STATUS_NOT_FOUND;
     }
 }
