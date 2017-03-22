@@ -9,7 +9,6 @@
 namespace Atanvarno\Router\Test;
 
 /** PSR-16 use block. */
-use FastRoute\Dispatcher;
 use Psr\SimpleCache\CacheInterface;
 
 /** PSR-17 use block. */
@@ -23,10 +22,13 @@ use Fig\Http\Message\RequestMethodInterface;
 /** PHP Unit use block. */
 use PHPUnit\Framework\TestCase;
 
+/** FastRoute use block. */
+use FastRoute\Dispatcher;
+
 /** Package use block. */
 use Atanvarno\Router\{
     Router,
-    CachedRouter
+    Router\CachedRouter
 };
 
 /** Dependency use block. */
