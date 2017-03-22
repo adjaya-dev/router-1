@@ -22,6 +22,7 @@ use FastRoute\{
 /** Package use block. */
 use Atanvarno\Router\{
     Exception\InvalidArgumentException,
+    Result,
     Result\MatchedResult,
     Result\NotFoundResult,
     Result\MethodNotAllowedResult,
@@ -114,7 +115,7 @@ class SimpleRouter implements Router
     }
 
     /** @inheritdoc */
-    public function dispatch(RequestInterface $request): array
+    public function dispatch(RequestInterface $request): Result
     {
         $dispatcherName = 'FastRoute\\Dispatcher\\' . $this->driver;
         /** @var Dispatcher $dispatcher */
