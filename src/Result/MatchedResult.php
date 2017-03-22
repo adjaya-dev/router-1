@@ -30,7 +30,7 @@ class MatchedResult extends BaseResult
     public function __construct(array $resultArray)
     {
         if ($resultsArray[0] !== Dispatcher::FOUND) {
-            throw new Exception();
+            throw new InvalidArgumentException();
         }
         $this->allowed = [];
         $this->attributes = $resultArray[2];
