@@ -223,10 +223,6 @@ class SimpleRouterTest extends TestCase
         $this->assertSame([], $result->getAttributes());
         $this->assertSame(null, $result->getHandler());
         $this->assertSame(405, $result->getStatus());
-        $expected = [
-            Dispatcher::METHOD_NOT_ALLOWED, [RequestMethodInterface::METHOD_GET]
-        ];
-        $this->assertSame($expected, $result);
     }
 
     public function testConnect()
