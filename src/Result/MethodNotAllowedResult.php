@@ -29,7 +29,7 @@ class MethodNotAllowedResult extends BaseResult
     /** @inheritdoc */
     public function __construct(array $resultsArray)
     {
-        if ($resultsArray[0] !== Dispatcher::FOUND) {
+        if ($resultsArray[0] !== Dispatcher::METHOD_NOT_ALLOWED) {
             throw new InvalidArgumentException();
         }
         $this->allowed = $resultsArray[1];
