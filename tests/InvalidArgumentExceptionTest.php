@@ -15,8 +15,9 @@ use Throwable;
 use PHPUnit\Framework\TestCase;
 
 /** Package use block. */
-use Atanvarno\Router\Exception\{
-    InvalidArgumentException, RouterException
+use Atanvarno\Router\{
+    RouterException,
+    Exception\InvalidArgumentException
 };
 
 class InvalidArgumentExceptionTest extends TestCase
